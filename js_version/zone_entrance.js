@@ -6,7 +6,7 @@ radio.onReceivedString(function (receivedString) {
     // serial.writeLine("car_id: " + arr[1])
     // serial.writeLine("zone: " + arr[2])
     // car_id, zone
-    if (arr[0] == "4" && arr[2] == zone) {
+    if (arr[0] == valid_id && arr[2] == zone) {
         basic.showArrow(ArrowNames.East)
         serial.writeLine("Zone Matched, Welcome!")
     } else {
@@ -16,8 +16,11 @@ radio.onReceivedString(function (receivedString) {
 })
 let arr: string[] = []
 let data = ""
+let valid_id = ""
+let zone = ""
 radio.setGroup(1)
-let zone = "A"
+zone = "A"
+valid_id = "3"
 basic.forever(function () {
     basic.showString("A")
 })
