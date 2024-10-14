@@ -18,6 +18,11 @@ let arr: string[] = []
 let data = ""
 let valid_id = ""
 let zone = ""
+serial.redirect(
+SerialPin.USB_TX,
+SerialPin.USB_RX,
+BaudRate.BaudRate115200
+)
 radio.setGroup(1)
 zone = "A"
 valid_id = "3"

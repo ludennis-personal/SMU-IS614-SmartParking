@@ -15,6 +15,11 @@ radio.onReceivedString(function (receivedString) {
 let arr: string[] = []
 let data = ""
 let valid_id = ""
+serial.redirect(
+SerialPin.USB_TX,
+SerialPin.USB_RX,
+BaudRate.BaudRate115200
+)
 radio.setGroup(1)
 valid_id = "1"
 basic.forever(function () {

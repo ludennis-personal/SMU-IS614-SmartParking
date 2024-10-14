@@ -13,9 +13,14 @@ let arr: string[] = []
 let data = ""
 let valid_id = ""
 let on_process = false
+serial.redirect(
+SerialPin.USB_TX,
+SerialPin.USB_RX,
+BaudRate.BaudRate115200
+)
 radio.setGroup(1)
 on_process = false
-valid_id = "4"              // Change for actio_id
+valid_id = "4"
 basic.forever(function () {
     basic.showLeds(`
         # # # # #
