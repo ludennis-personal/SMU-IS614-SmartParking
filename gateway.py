@@ -72,7 +72,10 @@ def handle_serial_data(s: serial.Serial) -> None:
 
     # Receive Data
     data = s.readline().decode("utf-8").strip()
-    logger.info(f"Received data: {data}")
+    logger.info(f"Received data: {data}")   # 2,SG888,A
+
+    # Insert to database
+    
 
     # Check action_id for process
 

@@ -8,7 +8,9 @@ radio.onReceivedString(function (receivedString) {
     if (arr[0] == valid_id) {
         if (arr[2] != "A" && "B") {
             radio.sendString("W")
+            arr[2] = "W"
         }
+        radio.sendString("2," + arr[1] + "," + arr[2])
     }
     basic.showArrow(ArrowNames.East)
 })
