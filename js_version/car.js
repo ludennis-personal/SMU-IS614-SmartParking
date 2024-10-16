@@ -9,8 +9,10 @@ radio.onReceivedString(function (receivedString) {
     }
 })
 input.onButtonPressed(Button.B, function () {
-    if (action_id < 6) {
-        action_id = action_id + 1
+    if (action_id == 1) {
+        action_id = 3
+    } else if (action_id == 3) {
+        action_id = 4
     } else {
         action_id = 1
     }
@@ -28,5 +30,5 @@ zone = "A"
 radio.setGroup(1)
 action_id = 1
 basic.forever(function () {
-    basic.showString("" + action_id)
+    basic.showString("" + (action_id))
 })
