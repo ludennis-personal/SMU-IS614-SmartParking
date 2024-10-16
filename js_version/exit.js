@@ -3,10 +3,12 @@ radio.onReceivedString(function (receivedString) {
     serial.writeLine("Data: " + data)
     arr = data.split(",")
     if (arr[0] == valid_id && on_process == false) {
+        basic.pause(100)
         // 5,SG888,A
         radio.sendString("5," + arr[1] + "," + arr[2])
         serial.writeLine("Sending data to Gateway and waiting for feedback....")
         on_process = true
+        basic.showIcon(IconNames.Chessboard)
     }
 })
 let arr: string[] = []
