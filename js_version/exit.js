@@ -2,9 +2,9 @@ radio.onReceivedString(function (receivedString) {
     data = receivedString
     serial.writeLine("Data: " + data)
     arr = data.split(",")
-    // serial.writeLine("action_id: " + arr[0])
-    // serial.writeLine("car_id: " + arr[1])
     if (arr[0] == valid_id && on_process == false) {
+        // 5,SG888,A
+        radio.sendString("5," + arr[1] + "," + arr[2])
         serial.writeLine("Sending data to Gateway and waiting for feedback....")
         on_process = true
     }
