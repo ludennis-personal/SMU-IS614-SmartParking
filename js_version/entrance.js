@@ -6,7 +6,7 @@ radio.onReceivedString(function (receivedString) {
     // serial.writeLine("zone: " + arr[2])
     // car_id, zone
     if (arr[0] == valid_id) {
-        if (arr[2] != "A" && "B") {
+        if (arr[2] != "A" && arr[2] != "B") {
             radio.sendString("W")
             arr[2] = "W"
         }
