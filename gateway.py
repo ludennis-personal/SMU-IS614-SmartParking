@@ -72,10 +72,10 @@ def handle_serial_data(s: serial.Serial) -> None:
 
     # Receive Data
     data = s.readline().decode("utf-8").strip()
-    logger.info(f"Received data: {data}")   # 2,SG888,A
+    logger.info(f"Received data: {data}")   # 2,SG888,A && 5,SG888,A
 
     # Insert to database
-    
+
 
     # Check action_id for process
 
@@ -109,13 +109,14 @@ def main() -> None:
 
     # Connect to Gateway
     port = get_serial_dev_name()
-    logger.info(f"Port: {port}")
+    # logger.info(f"Port: {port}")
 
     # Connect to Firebase
     FBConn = firebase.FirebaseApplication(config_data['db_link'], None)
+    logger.info("Connected to Database\n") if FBConn else logger.info("Failed to connect to Database\n")
 
     # Run the Microbit and Get Serial Write
-    with serial.Serial(port=get_serial_dev_name(), baudrate=115200, timeout=10) as s:
+    with serial.Serial(port=port, baudrate=115200, timeout=10) as s:
         # Sleep to make sure serial port has been opened before doing anything else
         time.sleep(1)
 

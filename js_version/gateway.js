@@ -1,9 +1,10 @@
 radio.onReceivedString(function (receivedString) {
     data = receivedString
     arr = data.split(",")
+    serial.writeLine(data)
     // Serial write for database insert
-    if (valid_id.indexOf(arr[0]) != -1) {
-        serial.writeString("" + arr[1] + "," + arr[2])
+    if (arr[0] == valid_id[0] || arr[0] == valid_id[1]) {
+        serial.writeString("" + arr[0] + "," + arr[1] + "," + arr[2])
     }
 })
 let arr: string[] = []
