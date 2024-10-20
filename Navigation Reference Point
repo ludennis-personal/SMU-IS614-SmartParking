@@ -1,0 +1,40 @@
+#For Sensor 1
+radio.set_group(1)
+# Set the radio group
+radio.set_transmit_power(2)
+# Set radio transmit power, range is 0 to 7
+sensor_id = "S1"
+# Sensor ID
+action_id = "7"
+# Action or priority ID
+# Start the forever loop to keep broadcasting
+
+def on_forever():
+    # Send the sensor ID with action ID
+    radio.send_string("" + action_id + sensor_id)
+    # Pause for 1 second before sending the next broadcast
+    basic.pause(1000)
+basic.forever(on_forever)
+
+
+
+#--------------------------------------------------------------------------------
+
+#for Sensor 2, just change the sensor_id
+
+radio.set_group(1)
+# Set the radio group
+radio.set_transmit_power(2)
+# Set radio transmit power, range is 0 to 7
+sensor_id = "S2"
+# Sensor ID
+action_id = "7"
+# Action or priority ID
+# Start the forever loop to keep broadcasting
+
+def on_forever():
+    # Send the sensor ID with action ID
+    radio.send_string("" + action_id + sensor_id)
+    # Pause for 1 second before sending the next broadcast
+    basic.pause(1000)
+basic.forever(on_forever)
