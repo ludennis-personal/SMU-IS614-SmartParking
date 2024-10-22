@@ -7,6 +7,7 @@ import sys
 import time
 from datetime import datetime
 
+# Firebase Packages
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
@@ -20,7 +21,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Constants
-FIREBASE_CREDENTIALS_PATH = "smu-is614-project-firebase-adminsdk-e2hbf-4acd7e6ccc.json"
+FIREBASE_CREDENTIALS_PATH = "./credentials/smu-is614-project-firebase-adminsdk-e2hbf-4acd7e6ccc.json"
 COLLECTION_NAME = 'test'
 SERIAL_BAUDRATE = 115200
 SERIAL_TIMEOUT = 10
@@ -34,7 +35,7 @@ ZONE_PRICES = {
     'W': 5
 }
 
-## DATABASE
+# DATABASE
 class DatabaseConnection:
     def __init__(self):
         cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
@@ -47,7 +48,7 @@ class DatabaseConnection:
         else:
             logger.error("Failed to connect to Database")
 
-## PARKING SYSTEM
+# PARKING SYSTEM
 class ParkingSystem:
     def __init__(self):
         self.db_conn = DatabaseConnection()
