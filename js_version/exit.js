@@ -11,6 +11,13 @@ radio.onReceivedString(function (receivedString) {
         basic.showIcon(IconNames.Chessboard)
     }
 })
+radio.onReceivedValue(function (name, value) {
+    if (name == "paid") {
+        if (value == 1) {
+            basic.showArrow(ArrowNames.North)
+        }
+    }
+})
 let arr: string[] = []
 let data = ""
 let valid_id = ""
