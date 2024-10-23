@@ -6,11 +6,15 @@ import serial.tools.list_ports
 import sys
 import time
 from datetime import datetime
+from typing import List, Tuple
 
 # Firebase Packages
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+
+# Import PathFinder
+from pathfinder import PathFinder
 
 # Configure logging
 logging.basicConfig(
@@ -27,6 +31,20 @@ SERIAL_BAUDRATE = 115200
 SERIAL_TIMEOUT = 10
 TIME_FORMAT = '%d/%m/%Y %H:%M:%S'
 DATE_FORMAT = "%Y-%m-%d_%H:%M:%S"
+ENTRANCE_SYMBOL = "*"
+
+# Parking Map 9x10
+PARKING_MAP = [
+    [0,ENTRANCE_SYMBOL,0,0,0,0,0,0,0,0,],
+    [0,'-','-',0,0,0,'-','-','-','A',],
+    [0,'-','-',0,0,0,'-','A1','A1','A1',],
+    [0,'-',0,0,0,0,'-','-','-','-',],
+    [0,'-','-',0,0,0,0,'-','-','-',],
+    [0,0,0,0,0,0,0,'-','B1','B1',],
+    [0,0,0,0,0,0,0,'-','-','B',],
+    ['W','W','W','W','W',0,0,0,0,0,],
+    ['W','W','W','W','W','W',0,0,0,'%',]
+]
 
 # Parking prices by zone
 ZONE_PRICES = {
@@ -35,7 +53,13 @@ ZONE_PRICES = {
     'W': 5
 }
 
-# DATABASE
+# Gate to Zone mapping
+GATE_TO_ZONE = {
+    'A': 'A',
+    'B': 'B',
+    'W': 'W'
+}
+
 class DatabaseConnection:
     def __init__(self):
         cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
@@ -48,23 +72,23 @@ class DatabaseConnection:
         else:
             logger.error("Failed to connect to Database")
 
-# PARKING SYSTEM
 class ParkingSystem:
     def __init__(self):
         self.db_conn = DatabaseConnection()
+        self.pathfinder = PathFinder(PARKING_MAP)
     
     def calculate_duration(self, entrance_time: str, exit_time: str) -> int:
         """Calculate parking duration in hours (rounded up)"""
         entrance = datetime.strptime(entrance_time, TIME_FORMAT)
         exit_dt = datetime.strptime(exit_time, TIME_FORMAT)
-        
         duration_minutes = (exit_dt - entrance).total_seconds() / 60
         return math.ceil(duration_minutes / 60)
 
-    def record_entrance(self, car_id: str, zone: str) -> None:
-        """Record car entrance in database"""
+    def record_entrance(self, car_id: str, zone: str) -> List[Tuple[int, int]]:
+        """Record car entrance and return navigation path"""
         logger.info("Recording car entrance")
-        
+
+        # Record entrance in database
         now = datetime.now()
         entrance_time = now.strftime(TIME_FORMAT)
         document_id = f"{now.strftime(DATE_FORMAT)}_{car_id}"
@@ -77,13 +101,18 @@ class ParkingSystem:
             'duration': "",
             'amount': 0.0
         })
-        logger.info("Car entrance recorded successfully")
-        logger.info(f"car_id: {car_id}, zone {zone}, entrance_time: {entrance_time}")
+        
+        logger.info(f"Car entrance recorded - car_id: {car_id}, zone: {zone}")
 
-    def record_exit(self, car_id: str, zone: str) -> None:
+    def record_exit(self, car_id: str, gate: str) -> None:
         """Record car exit and calculate parking fee"""
         logger.info("Recording car exit")
         
+        zone = GATE_TO_ZONE.get(gate)
+        if not zone:
+            logger.error(f"Invalid gate: {gate}")
+            return
+
         exit_time = datetime.now().strftime(TIME_FORMAT)
         
         # Query for the car's entrance record
@@ -110,10 +139,8 @@ class ParkingSystem:
             "exit_time": exit_time,
             "duration": duration
         })
-        logger.info(f"Car exit recorded for car_id: {car_id}. Duration: {duration} h, Amount: ${amount}")
+        logger.info(f"Car exit recorded - car_id: {car_id}, duration: {duration}h, amount: ${amount}")
 
-
-# Serial Connection for Gateway Microbit
 class SerialConnection:
     @staticmethod
     def get_serial_port() -> str:
@@ -123,26 +150,56 @@ class SerialConnection:
 
         ports = list(serial.tools.list_ports.comports())
         if not ports:
-            raise ConnectionError("No serial ports found. Please check device connection.")
+            raise ConnectionError("No serial ports found")
 
-        logger.info(f"Available serial ports: {ports}")
         return ports[0].device
 
     @staticmethod
-    def handle_serial_message(message: str, parking_system: ParkingSystem) -> None:
-        """Process incoming serial messages"""
+    def handle_serial_message(message: str, parking_system: ParkingSystem, serial_conn: serial.Serial) -> None:
+        """Process incoming serial messages and send responses"""
         try:
-            action, car_id, zone = message.split(",")
+            action, car_id, gate = message.split(",")
             
             if action == "2":  # Entrance
-                parking_system.record_entrance(car_id, zone)
+
+                # Insert to database
+                parking_system.record_entrance(car_id, gate)
+
+                # Find start and end positions first
+                start = parking_system.pathfinder.find_symbol(ENTRANCE_SYMBOL)
+                end = parking_system.pathfinder.find_symbol(gate)
+                
+                # Calculate path using these positions
+                path = parking_system.pathfinder.calculate_path(ENTRANCE_SYMBOL, gate)
+                
+                if path:
+                    # Calculate distances matrix from the end position
+                    distances = parking_system.pathfinder.calculate_distances(end, gate)
+                    
+                    # Use the distances matrix to find the path from start
+                    path_matrix = parking_system.pathfinder.find_path(
+                        start=start,
+                        distance_matrix=distances,
+                        target_symbol=gate
+                    )
+                    
+                    # Print the path visualization
+                    
+                    logger.info(f"Navigation path for car {car_id} from gate {gate}:")
+                    parking_system.pathfinder.print_path(path_matrix)
+                    
+                    # Convert path to string format expected by micro:bit
+                    # path_str = ";".join(f"{x},{y}" for x, y in path_matrix)
+                    # serial_conn.write(f"PATH:{path_str}\n".encode())
+                
             elif action == "5":  # Exit
-                parking_system.record_exit(car_id, zone)
+                parking_system.record_exit(car_id, gate)
+                
             else:
                 logger.warning(f"Unknown action code: {action}")
                 
-        except ValueError:
-            logger.error(f"Message: {message}")
+        except ValueError as e:
+            logger.error(f"Message parsing error: {message}, Error: {str(e)}")
 
 def main():
     try:
@@ -158,7 +215,7 @@ def main():
             while True:
                 if serial_conn.in_waiting > 0:
                     data = serial_conn.readline().decode("utf-8").strip()
-                    SerialConnection.handle_serial_message(data, parking_system)
+                    SerialConnection.handle_serial_message(data, parking_system, serial_conn)
                     
     except Exception as e:
         logger.error(f"Fatal error: {str(e)}")
