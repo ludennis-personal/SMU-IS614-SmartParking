@@ -1,3 +1,6 @@
+input.onButtonPressed(Button.A, function () {
+    radio.sendValue("paid", 1)
+})
 radio.onReceivedString(function (receivedString) {
     data = receivedString
     arr = data.split(",")
@@ -14,7 +17,7 @@ SerialPin.USB_TX,
 SerialPin.USB_RX,
 BaudRate.BaudRate115200
 )
-radio.setGroup(88)
+radio.setGroup(1)
 valid_id = ["2", "5"]
 basic.forever(function () {
     basic.showLeds(`
