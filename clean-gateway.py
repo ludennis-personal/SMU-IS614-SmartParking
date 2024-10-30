@@ -141,6 +141,11 @@ class ParkingSystem:
         })
         logger.info(f"Car exit recorded - car_id: {car_id}, duration: {duration}h, amount: ${amount}")
 
+    
+    def get_distance(rssi_1, rssi_2) -> None:
+        pass
+
+
 class SerialConnection:
     @staticmethod
     def get_serial_port() -> str:
@@ -158,9 +163,13 @@ class SerialConnection:
     def handle_serial_message(message: str, parking_system: ParkingSystem, serial_conn: serial.Serial) -> None:
         """Process incoming serial messages and send responses"""
         try:
-            action, car_id, gate = message.split(",")
-            
+            data = message.split(",")
+            action = data[0]
+
             if action == "2":  # Entrance
+
+                car_id = data[1]
+                gate = data[2]
 
                 # Insert to database
                 parking_system.record_entrance(car_id, gate)
@@ -193,8 +202,19 @@ class SerialConnection:
                     # serial_conn.write(f"PATH:{path_str}\n".encode())
                 
             elif action == "5":  # Exit
-                parking_system.record_exit(car_id, gate)
+
+                car_id = data[1]
+                gate = data[2]
                 
+                parking_system.record_exit(car_id, gate)
+            
+            elif action == "7":     # Get Distance
+
+                s1_rssi = data[1]
+                s2_rssi = data[2]
+
+                parking_system.get_distance(s1_rssi, s2_rssi)
+
             else:
                 logger.warning(f"Unknown action code: {action}")
                 
