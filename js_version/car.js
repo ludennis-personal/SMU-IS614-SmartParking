@@ -10,10 +10,10 @@ radio.onReceivedString(function (receivedString) {
     if (action_id == 1) {
         if (receivedString == "s1") {
             s1_rssi = radio.receivedPacket(RadioPacketProperty.SignalStrength)
-            serial.writeString("s1: " + s1_rssi)
+            serial.writeLine("s1: " + s1_rssi)
         } else if (receivedString == "s2") {
             s2_rssi = radio.receivedPacket(RadioPacketProperty.SignalStrength)
-            serial.writeString("s2: " + s2_rssi)
+            serial.writeLine("s2: " + s2_rssi)
         }
     }
 })
