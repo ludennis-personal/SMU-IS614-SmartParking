@@ -10,8 +10,10 @@ radio.onReceivedString(function (receivedString) {
     if (action_id == 1) {
         if (receivedString == "s1") {
             s1_rssi = radio.receivedPacket(RadioPacketProperty.SignalStrength)
+            serial.writeString("s1: " + s1_rssi)
         } else if (receivedString == "s2") {
             s2_rssi = radio.receivedPacket(RadioPacketProperty.SignalStrength)
+            serial.writeString("s2: " + s2_rssi)
         }
     }
 })
@@ -46,5 +48,6 @@ basic.forever(function () {
     basic.showString("" + (action_id))
     if (action_id == 1 && (s1_rssi != 0 && s2_rssi != 0)) {
         radio.sendString("7" + "," + s1_rssi + "," + s2_rssi)
+        serial.writeString("Send Gateway: 7" + "," + s1_rssi + "," + s2_rssi)
     }
 })

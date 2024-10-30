@@ -143,6 +143,7 @@ class ParkingSystem:
 
     
     def get_distance(rssi_1, rssi_2) -> None:
+        logger.info(f'RSSI_1: {rssi_1}, RSSI_2: {rssi_2}')
         pass
 
 
