@@ -4,11 +4,9 @@ import serial
 import serial.tools.list_ports
 import sys
 import time
-from typing import List, Tuple
 
 # Import custom modules
 from parking_system import ParkingSystem
-from path_finder import PathFinder
 
 # Configure logging
 logging.basicConfig(
