@@ -134,7 +134,7 @@ class PathFinder:
         # Mark path with '$$'
         for row, col in path:
             if isinstance(display_matrix[row][col], (int, str)):
-                display_matrix[row][col] = '*'
+                display_matrix[row][col] = '**'
                 
         # Print the matrix
         for row in display_matrix:
