@@ -40,10 +40,12 @@ class SerialConnection:
         try:
             data = message.split(",")
             action = data[0]
+            car_id = data[1]
+            gate = data[2]
 
             if action == "2":  # Entrance
-                car_id = data[1]
-                gate = data[2]
+                # car_id = data[1]
+                # gate = data[2]
 
                 # Insert to database
                 parking_system.record_entrance(car_id, gate)
@@ -70,26 +72,29 @@ class SerialConnection:
                     parking_system.pathfinder.print_path(path_matrix)
                 
             elif action == "5":  # Exit
-                car_id = data[1]
-                gate = data[2]
+                # car_id = data[1]
+                # gate = data[2]
                 parking_system.record_exit(car_id, gate)
             
-            elif action == "7":  # Get Distance
-                s1_rssi = data[1]
-                s2_rssi = data[2]
-                parking_system.get_distance(s1_rssi, s2_rssi)
+            elif action == "7":  # Get Distance #7,CarID,RSSI_1,RSSI_2
+                s1_rssi = float(data[3])
+                s2_rssi = float(data[4])
+
+                parking_system.navigate(car_id, gate, s1_rssi, s2_rssi)
 
             else:
                 logger.warning(f"Unknown action code: {action}")
                 
         except ValueError as e:
-            logger.error(f"Message parsing error: {message}, Error: {str(e)}")
+            logger.info(f"Message parsing error: {message}, Error: {str(e)}")
 
 def main():
     try:
         parking_system = ParkingSystem()
         port = SerialConnection.get_serial_port()
         
+        # port = "COM5"
+
         with serial.Serial(port=port, baudrate=SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT) as serial_conn:
             time.sleep(1)  # Allow serial connection to stabilize
             serial_conn.reset_input_buffer()
@@ -102,8 +107,8 @@ def main():
                     SerialConnection.handle_serial_message(data, parking_system, serial_conn)
                     
     except Exception as e:
-        logger.error(f"Fatal error: {str(e)}")
-        sys.exit(1)
+        logger.info(f"Fatal error: {str(e)}")
+        # sys.exit(1)
 
 if __name__ == "__main__":
     main()

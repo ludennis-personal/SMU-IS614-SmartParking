@@ -31,7 +31,7 @@ class ParkingNavigation:
         
         # Use trilateration algorithm to calculate position
         # Based on the intersection of two circles
-        dist = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        dist = 0.6
         
         if dist > d1 + d2:
             raise ValueError("Invalid distance data: The distance between points is greater than the distance between reference points")
@@ -59,13 +59,13 @@ class ParkingNavigation:
         min_distance = float('inf')
         nearest_point = None
         
-        for path in self.predefined_paths:
-            for point in path:
-                dist = math.sqrt((point[0] - current_pos[0]) ** 2 + 
-                               (point[1] - current_pos[1]) ** 2)
-                if dist < min_distance:
-                    min_distance = dist
-                    nearest_point = point
+        for point in self.predefined_paths:
+            dist = math.sqrt((point[0] - current_pos[0]) ** 2 + 
+                            (point[1] - current_pos[1]) ** 2)
+            # print(dist)
+            if dist < min_distance:
+                min_distance = dist
+                nearest_point = point
                     
         return nearest_point
     
@@ -89,11 +89,11 @@ class ParkingNavigation:
             # Calculate direction angle
             angle = math.degrees(math.atan2(target_point[1] - current_pos[1],
                                           target_point[0] - current_pos[0]))
-            
+            # print(angle)
             # Calculate distance
             distance = math.sqrt((target_point[0] - current_pos[0]) ** 2 +
                                (target_point[1] - current_pos[1]) ** 2)
-            
+            # print(distance)
             return {
                 "current_position": current_pos,
                 "nearest_path_point": target_point,

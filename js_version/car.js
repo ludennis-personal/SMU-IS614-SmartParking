@@ -22,8 +22,6 @@ input.onButtonPressed(Button.B, function () {
         action_id = 3
     } else if (action_id == 3) {
         action_id = 4
-        s1_rssi = 0
-        s2_rssi = 0
     } else {
         action_id = 1
     }
@@ -47,7 +45,8 @@ s2_rssi = 0
 basic.forever(function () {
     basic.showString("" + (action_id))
     if (action_id == 1 && (s1_rssi != 0 && s2_rssi != 0)) {
-        radio.sendString("7" + "," + s1_rssi + "," + s2_rssi)
-        serial.writeString("Send Gateway: 7" + "," + s1_rssi + "," + s2_rssi)
+        radio.sendString("7" + "," + id2 + "," + zone + "," + s1_rssi + "," + s2_rssi)
+        s1_rssi = 0
+        s2_rssi = 0
     }
 })

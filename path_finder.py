@@ -33,10 +33,10 @@ class PathFinder:
             str(value) == '*'
         )
 
-    def calculate_path(self, start_symbol: str, end_symbol: str) -> List[Tuple[int, int]]:
+    def calculate_path(self, start, end_symbol: str) -> List[Tuple[int, int]]:
         """Calculate the shortest path between two points and return as coordinates."""
         try:
-            start = self.find_symbol(start_symbol)
+            start = start
             end = self.find_symbol(end_symbol)
             
             # Calculate distances from the end point
@@ -86,7 +86,7 @@ class PathFinder:
 
         return distances
 
-    def find_path(self, start: Tuple[int, int], distance_matrix: List[List[float]], 
+    def find_path(self, start, distance_matrix: List[List[float]], 
                  target_symbol: str) -> List[Tuple[int, int]]:
         """Find the shortest path using the distance matrix."""
         if distance_matrix[start[0]][start[1]] == float('inf'):
@@ -94,7 +94,7 @@ class PathFinder:
             
         path = [(start[0], start[1])]
         current = start
-
+        # print(f"Current {current}")
         while distance_matrix[current[0]][current[1]] > 0:  # Continue until we reach distance 0 (target)
             row, col = current
             
@@ -134,10 +134,10 @@ class PathFinder:
         # Mark path with '$$'
         for row, col in path:
             if isinstance(display_matrix[row][col], (int, str)):
-                display_matrix[row][col] = '$$'
+                display_matrix[row][col] = '*'
                 
         # Print the matrix
         for row in display_matrix:
-            print(" ".join(f"{str(elem):>4}" for elem in row))
+            print(" ".join(f"{str(elem):>6}" for elem in row))
 
         print("\n")

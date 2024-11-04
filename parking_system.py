@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import List, Tuple
 from google.cloud.firestore_v1.base_query import FieldFilter
 from path_finder import PathFinder
+from navigation import ParkingNavigation
 
 # Configure logging
 logging.basicConfig(
@@ -20,20 +21,39 @@ FIREBASE_CREDENTIALS_PATH = "./credentials/smu-is614-project-firebase-adminsdk-e
 COLLECTION_NAME = 'test'
 TIME_FORMAT = '%d/%m/%Y %H:%M:%S'
 DATE_FORMAT = "%Y-%m-%d_%H:%M:%S"
-ENTRANCE_SYMBOL = "*"
+CURRENT_POSITION = "*"
+PT = -75
+ENVIRONMENT = 2
 
 # Parking Map 9x10
+## A = VIP, B = RESERVED, W = FREE
 PARKING_MAP = [
-    [0,ENTRANCE_SYMBOL,0,0,0,0,0,0,0,0,],
-    [0,'-','-',0,0,0,'-','-','-','A',],
-    [0,'-','-',0,0,0,'-','A1','A1','A1',],
-    [0,'-',0,0,0,0,'-','-','-','-',],
-    [0,'-','-',0,0,0,0,'-','-','-',],
-    [0,0,0,0,0,0,0,'-','B1','B1',],
-    [0,0,0,0,0,0,0,'-','-','B',],
-    ['W','W','W','W','W',0,0,0,0,0,],
-    ['W','W','W','W','W','W',0,0,0,'%',]
+    [0,0,0,0,'MALL','MALL',0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,'ENT'],
+    [0,'-','-','-','-','-','-',0,0,0,'ENT'],
+    [0,'-','V','V','V','V','-',0,0,0,0],
+    [0,'-','V','V','V','V','-',0,0,0,0],
+    [0,'VEXIT',0,0,0,0,'A',0,0,'W','W'],
+    [0,'VEXIT',0,0,0,0,'A',0,0,'W','W'],
+    [0,'-','-','-','-','-','-','-',0,'W','W'],
+    [0,0,'-','R','R','R','R','-',0,'W','W'],
+    [0,0,'-','R','R','R','R','-',0,'W','W'],
+    [0,0,'REXIT',0,0,0,0,'B',0,'W','W'],
+    ['EXT',0,'REXIT',0,0,0,0,'B',0,'W','W'],
+    ['EXT',0,'-','-','-','-','-','-',0,'W','W'],
+    [0,0,0,0,0,0,0,0,0,'W','W'],
+    [0,0,0,0,0,0,0,0,0,'W','W'],
 ]
+
+res = []
+rows = len(PARKING_MAP)
+cols = len(PARKING_MAP[0])
+for r in range(rows):
+    for c in range(cols):
+        if PARKING_MAP[r][c] == 0:
+            res.append([r,c])
+# print(res)
 
 # Parking prices by zone
 ZONE_PRICES = {
@@ -48,6 +68,7 @@ GATE_TO_ZONE = {
     'B': 'B',
     'W': 'W'
 }
+
 
 class DatabaseConnection:
     def __init__(self):
@@ -65,7 +86,10 @@ class ParkingSystem:
     def __init__(self):
         self.db_conn = DatabaseConnection()
         self.pathfinder = PathFinder(PARKING_MAP)
-    
+        self.nav_system = ParkingNavigation([(3, 1), (13, 7)], res)
+        self.PT = PT
+        self.ENVIRONMENT = ENVIRONMENT
+
     def calculate_duration(self, entrance_time: str, exit_time: str) -> int:
         """Calculate parking duration in hours (rounded up)"""
         entrance = datetime.strptime(entrance_time, TIME_FORMAT)
@@ -129,7 +153,46 @@ class ParkingSystem:
             "duration": duration
         })
         logger.info(f"Car exit recorded - car_id: {car_id}, duration: {duration}h, amount: ${amount}")
+
+    def get_current_distance(self, rssi):
+        """Get the current distance of the car"""
+        top = self.PT - rssi
+        bottom = 10 * self.ENVIRONMENT
+
+        distance = 10 ** (top/bottom)
+        logger.info(f"distance: {distance}")
+
+        return float(distance)
     
-    def get_distance(self, rssi_1, rssi_2):
+    def navigate(self, car_id, gate, rssi_1, rssi_2):
+        """Navigation for Car"""
         logger.info(f'RSSI_1: {rssi_1}, RSSI_2: {rssi_2}')
-        pass
+
+        # Simulate receiving distance data
+        current_distances = [self.get_current_distance(rssi_1), self.get_current_distance(rssi_2)]
+        
+        # Get navigation instructions
+        result = self.nav_system.get_navigation_instructions(current_distances)
+        logger.info(f"result: {result}\n")
+
+        # Find start and end positions first
+        #start = self.pathfinder.find_symbol(result['nearest_path_point'])
+        start = result['nearest_path_point']
+        end = self.pathfinder.find_symbol(gate)
+        
+        # Calculate path using these positions
+        path = self.pathfinder.calculate_path(start, gate)
+        
+        if path:
+            # Calculate distances matrix from the end position
+            distances = self.pathfinder.calculate_distances(end, gate)
+            
+            # Use the distances matrix to find the path from start
+            path_matrix = self.pathfinder.find_path(
+                start=start,
+                distance_matrix=distances,
+                target_symbol=gate
+            )
+            
+            logger.info(f"Navigation path for car {car_id} from gate {gate}:")
+            self.pathfinder.print_path(path_matrix)
