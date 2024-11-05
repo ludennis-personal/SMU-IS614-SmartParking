@@ -221,6 +221,7 @@ class ParkingSystem:
                     lot_ref.update({
                         f'park_in.{next_index}': time
                     })
+                    logger.info(f"Parking Lot {lot_id} Insert Park In Success")
                 else:
                     park_out = current_data.get('park_out', {})
                     # Get the next available index
@@ -228,8 +229,8 @@ class ParkingSystem:
                     lot_ref.update({
                         f'park_out.{next_index}': time
                     })
+                    logger.info(f"Parking Lot {lot_id} Insert Park Out Success")
 
-                logger.info(f"Parking Lot {lot_id} Insert Success")
             else:
                 # If document doesn't exist, create it with initial value
                 initial_data = {

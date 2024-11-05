@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Constants
 SERIAL_BAUDRATE = 115200
 SERIAL_TIMEOUT = 10
-ENTRANCE_SYMBOL = "*"
+ENTRANCE_SYMBOL = "ENT"
 
 class SerialConnection:
     @staticmethod
@@ -114,10 +114,14 @@ def main():
             
             logger.info("Starting main loop...")
             while True:
-                if serial_conn.in_waiting > 0:
-                    data = serial_conn.readline().decode("utf-8").strip()
-                    SerialConnection.handle_serial_message(data, parking_system, serial_conn)
-                    
+                try:
+                    if serial_conn.in_waiting > 0:
+                        data = serial_conn.readline().decode("utf-8").strip()
+                        SerialConnection.handle_serial_message(data, parking_system, serial_conn)
+
+                except Exception as e:
+                    logger.error(f"Error occurred in the main loop: {str(e)}")
+                
     except Exception as e:
         logger.info(f"Fatal error: {str(e)}")
         # sys.exit(1)

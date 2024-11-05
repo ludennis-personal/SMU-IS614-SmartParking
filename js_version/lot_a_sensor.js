@@ -16,6 +16,7 @@ function on_every_interval () {
                 lots[i] = true
                 serial.writeLine("LOT " + i + ": PARKED")
                 radio.sendString("6," + lot_group + i + ",parked")
+                basic.showIcon(IconNames.Happy)
             }
         } else {
             // If status changed from parked to not parked
@@ -23,6 +24,7 @@ function on_every_interval () {
                 lots[i] = false
                 serial.writeLine("LOT " + i + ": NOT PARKED")
                 radio.sendString("6," + lot_group + i + ",not_parked")
+                basic.showIcon(IconNames.Sad)
             }
         }
     }
@@ -41,8 +43,8 @@ lots = [false, false]
 ultrasonics = [0, 0]
 // Lot group identifier
 lot_group = "A"
-basic.showIcon(IconNames.SmallHeart)
 basic.forever(function () {
+    basic.showIcon(IconNames.SmallHeart)
     on_every_interval()
     basic.pause(2000)
 })
