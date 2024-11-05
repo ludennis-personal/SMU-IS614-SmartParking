@@ -37,15 +37,15 @@ class SerialConnection:
     @staticmethod
     def handle_serial_message(message: str, parking_system: ParkingSystem, serial_conn: serial.Serial) -> None:
         """Process incoming serial messages and send responses"""
+        logger.info(f"message: {message}")
         try:
             data = message.split(",")
             action = data[0]
-            car_id = data[1]
-            gate = data[2]
 
             if action == "2":  # Entrance
-                # car_id = data[1]
-                # gate = data[2]
+                
+                car_id = data[1]
+                gate = data[2]
 
                 # Insert to database
                 parking_system.record_entrance(car_id, gate)
@@ -72,11 +72,19 @@ class SerialConnection:
                     parking_system.pathfinder.print_path(path_matrix)
                 
             elif action == "5":  # Exit
-                # car_id = data[1]
-                # gate = data[2]
+                
+                car_id = data[1]
+                gate = data[2]
+
                 parking_system.record_exit(car_id, gate)
+
+            elif action == "6":
+                pass
             
             elif action == "7":  # Get Distance #7,CarID,RSSI_1,RSSI_2
+
+                car_id = data[1]
+                gate = data[2]
                 s1_rssi = float(data[3])
                 s2_rssi = float(data[4])
 
@@ -93,7 +101,7 @@ def main():
         parking_system = ParkingSystem()
         port = SerialConnection.get_serial_port()
         
-        # port = "COM5"
+        port = "COM5"
 
         with serial.Serial(port=port, baudrate=SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT) as serial_conn:
             time.sleep(1)  # Allow serial connection to stabilize
