@@ -37,7 +37,7 @@ class SerialConnection:
     @staticmethod
     def handle_serial_message(message: str, parking_system: ParkingSystem, serial_conn: serial.Serial) -> None:
         """Process incoming serial messages and send responses"""
-        logger.info(f"message: {message}")
+        # logger.info(f"message: {message}")
         try:
             data = message.split(",")
             action = data[0]
@@ -79,7 +79,11 @@ class SerialConnection:
                 parking_system.record_exit(car_id, gate)
 
             elif action == "6":
-                pass
+                
+                lot_id = data[1]
+                isParked = True if data[2] == 'parked' else False
+
+                parking_system.lot_update(lot_id, isParked)
             
             elif action == "7":  # Get Distance #7,CarID,RSSI_1,RSSI_2
 

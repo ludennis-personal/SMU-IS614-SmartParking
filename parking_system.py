@@ -5,6 +5,7 @@ from firebase_admin import credentials, firestore
 from datetime import datetime
 from typing import List, Tuple
 from google.cloud.firestore_v1.base_query import FieldFilter
+from google.cloud.firestore_v1 import ArrayUnion
 from path_finder import PathFinder
 from navigation import ParkingNavigation
 
@@ -18,7 +19,9 @@ logger = logging.getLogger(__name__)
 
 # Constants
 FIREBASE_CREDENTIALS_PATH = "./credentials/smu-is614-project-firebase-adminsdk-e2hbf-4acd7e6ccc.json"
-COLLECTION_NAME = 'test'
+MAIN_COLLECTION = 'test'
+LOT_COLLECTION = 'test-parking-lot'
+
 TIME_FORMAT = '%d/%m/%Y %H:%M:%S'
 DATE_FORMAT = "%Y-%m-%d_%H:%M:%S"
 CURRENT_POSITION = "*"
@@ -75,7 +78,8 @@ class DatabaseConnection:
         cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
         firebase_admin.initialize_app(cred)
         self.db = firestore.client()
-        self.carpark_ref = self.db.collection(COLLECTION_NAME)
+        self.carpark_ref = self.db.collection(MAIN_COLLECTION)
+        self.lot_ref = self.db.collection(LOT_COLLECTION)
         
         if self.db:
             logger.info("Connected to Database")
@@ -196,3 +200,43 @@ class ParkingSystem:
             
             logger.info(f"Navigation path for car {car_id} from gate {gate}:")
             self.pathfinder.print_path(path_matrix)
+    
+    def lot_update(self, lot_id, status):
+        
+        time = datetime.now().strftime(TIME_FORMAT)
+
+        try:
+            lot_ref = self.db_conn.lot_ref.document(lot_id)
+            
+            # Get the current document
+            doc = lot_ref.get()
+            
+            if doc.exists:
+                current_data = doc.to_dict()
+                
+                if status:
+                    park_in = current_data.get('park_in', {})
+                    # Get the next available index
+                    next_index = str(len(park_in))
+                    lot_ref.update({
+                        f'park_in.{next_index}': time
+                    })
+                else:
+                    park_out = current_data.get('park_out', {})
+                    # Get the next available index
+                    next_index = str(len(park_out))
+                    lot_ref.update({
+                        f'park_out.{next_index}': time
+                    })
+
+                logger.info(f"Parking Lot {lot_id} Insert Success")
+            else:
+                # If document doesn't exist, create it with initial value
+                initial_data = {
+                    'park_in': {'0': time} if status else {},
+                    'park_out': {} if status else {'0': time}
+                }
+                lot_ref.set(initial_data)
+
+        except Exception as e:
+            logger.info("Parking Lot Insert Fail")
